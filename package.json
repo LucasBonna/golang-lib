@@ -1,0 +1,8 @@
+{
+  "name": "golang-lib",
+  "version": "0.0.0-development",
+  "private": true,
+  "release": {
+    "branches": ["main"]
+  }
+}

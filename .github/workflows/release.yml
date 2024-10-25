@@ -3,54 +3,66 @@ name: Release
 on:
   push:
     branches:
-      - main  # Aciona o workflow quando houver um push na branch main
+      - main
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions: write-all  # Importante para criar releases
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Importante para o semantic release
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: '1.23'  # Defina a versão do Go que você está usando.
+          go-version: '1.22'  # Atualizado para 1.22 que é a versão atual estável
 
       - name: Install dependencies
         run: go mod tidy
 
       - name: Build
-        run: go build ./...  # Compila todos os pacotes
+        run: go build ./...
 
       - name: Run tests
-        run: go test ./...  # Executa os testes
+        run: go test ./...
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
 
       - name: Semantic Release
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}  # Token de acesso do GitHub para criar um release
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          semantic_version: 19
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+          branch: main
 
-      - name: Print Release Version
+      - name: Create git tag
+        if: steps.semantic.outputs.new_release_version != ''
         run: |
-          echo "New release version: ${{ steps.semantic.outputs.new_release_version }}"
-
-      - name: Update go.mod version
-        run: |
-          go version ${{ steps.semantic.outputs.new_release_version }}
-          go mod edit -version ${{ steps.semantic.outputs.new_release_version }}
-          go mod tidy
+          git tag v${{ steps.semantic.outputs.new_release_version }}
+          git push origin v${{ steps.semantic.outputs.new_release_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Create Release
-        id: create_release
+        if: steps.semantic.outputs.new_release_version != ''
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.semantic.outputs.new_release_version }}  # Usa a nova versão
-          release_name: Release ${{ steps.semantic.outputs.new_release_version }}
-          body: |
-            Changelog:
-            - Nova versão lançada: ${{ steps.semantic.outputs.new_release_version }}
+          tag_name: v${{ steps.semantic.outputs.new_release_version }}
+          name: Release v${{ steps.semantic.outputs.new_release_version }}
+          body: ${{ steps.semantic.outputs.new_release_notes }}
+          draft: false
+          prerelease: false
         env:
-          GITHUB_TOKEN : ${{ secrets.GITHUB_TOKEN  }}  # Token de acesso para criar um release
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
