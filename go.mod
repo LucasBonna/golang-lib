@@ -1,3 +1,3 @@
-module github.com/lucasbonna/contafacil/lib
+module github.com/lucasbonna/golang-lib
 
 go 1.22.5
