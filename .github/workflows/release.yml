@@ -31,7 +31,7 @@ jobs:
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Token de acesso do GitHub para criar um release
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}  # Token de acesso do GitHub para criar um release
 
       - name: Print Release Version
         run: |
@@ -53,4 +53,4 @@ jobs:
             Changelog:
             - Nova versão lançada: ${{ steps.semantic.outputs.new_release_version }}
         env:
-          GH_TOKEN : ${{ secrets.GH_TOKEN }}  # Token de acesso para criar um release
+          GITHUB_TOKEN : ${{ secrets.GITHUB_TOKEN  }}  # Token de acesso para criar um release
