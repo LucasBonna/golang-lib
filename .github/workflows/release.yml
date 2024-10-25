@@ -27,9 +27,6 @@ jobs:
       - name: Run tests
         run: go test ./...  # Executa os testes
 
-      - name: Generate Swagger Documentation
-        run: swag init -g ./cmd/api/main.go -o ./cmd/docs  # Gera a documentação Swagger
-
       - name: Semantic Release
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
