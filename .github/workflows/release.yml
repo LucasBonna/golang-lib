@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main  # Aciona o workflow quando houver um push na branch main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.23'  # Defina a versão do Go que você está usando.
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./...  # Compila todos os pacotes
+
+      - name: Run tests
+        run: go test ./...  # Executa os testes
+
+      - name: Generate Swagger Documentation
+        run: swag init -g ./cmd/api/main.go -o ./cmd/docs  # Gera a documentação Swagger
+
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token de acesso do GitHub para criar um release
+
+      - name: Print Release Version
+        run: |
+          echo "New release version: ${{ steps.semantic.outputs.new_release_version }}"
+
+      - name: Update go.mod version
+        run: |
+          go version ${{ steps.semantic.outputs.new_release_version }}
+          go mod edit -version ${{ steps.semantic.outputs.new_release_version }}
+          go mod tidy
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.semantic.outputs.new_release_version }}  # Usa a nova versão
+          release_name: Release ${{ steps.semantic.outputs.new_release_version }}
+          body: |
+            Changelog:
+            - Nova versão lançada: ${{ steps.semantic.outputs.new_release_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token de acesso para criar um release
