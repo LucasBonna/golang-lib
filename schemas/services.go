@@ -10,6 +10,6 @@ const (
 
 var ServiceUrls = map[ServiceNames]string{
 	CFCrawler:       "http://cfcrawler-api",
-	CFStorage:       "http://localhost:8001",
+	CFStorage:       "http://cfstorage-api",
 	CFNotifications: "http://cfcnotifications-api",
 }
